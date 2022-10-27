@@ -1,0 +1,83 @@
+.currencySearchContainer {
+  position: relative;
+  .inputCurrency {
+    display: flex;
+    align-items: center;
+    position: relative;
+    border: 1px solid #a6a4a4;
+    box-shadow: 1px 1px 5px #a6a4a4;
+    border-radius: 5px;
+    .currencyFlag {
+      padding: 0 5px;
+      text-align: center;
+      width: 60px;
+      height: 30px;
+      display: inline-block;
+      .flagImage {
+        height: 100%;
+      }
+    }
+  }
+  .searchCurrency {
+    border-width: 0;
+    border-radius: 5px;
+    padding: 15px 25px 15px 0;
+    width: 315px;
+    font-size: 20px;
+    background-repeat: no-repeat;
+    background-position: left;
+    background-size: 50px;
+  }
+  .searchCurrency:focus {
+    outline: none;
+  }
+  .searchCurrency ~ .firstSpan::after {
+    position: absolute;
+    content: "";
+    transform:translate(-50%, -50%) rotate(315deg);
+    top: 50%;
+    bottom: 50%;
+    right: 8px;
+    padding: 3px;
+    border-style: solid;
+    border-width: 2px 2px 0 0;
+    border-color: black;
+  }
+  .searchCurrency ~ .secondSpan::after {
+    position: absolute;
+    content: "";
+    transform:translate(-50%, -50%) rotate(135deg);
+    top: 50%;
+    bottom: 50%;
+    right: 8px;
+    padding: 3px;
+    border-style: solid;
+    border-width: 2px 2px 0 0;
+    border-color: black;
+  }
+  .currencyList {
+    background: white;
+    position: absolute;
+    top: 105%;
+    border: 1px solid black;
+    border-radius: 5px;
+    width: 377px;
+    padding: 5px;
+    box-shadow: 1px 1px 5px #a6a4a4;
+    p {
+      margin: 0;
+      color: #8a8787;
+      font-size: 14px;
+    }
+    .currencyListItem,.notFound {
+      padding: 5px 5px 5px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 40px
+    }
+    .currencyListItem:hover {
+      background: #ebebeb;
+    }
+  }
+}

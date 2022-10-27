@@ -1,0 +1,11 @@
+<div class="currenciesContainer">
+  <div class="currencyWrapper">
+    <app-currency [dataRate]="rates[0]"></app-currency>
+    <img class="arrowsImg" src='./assets/arrows.png'  alt="arrows">
+    <app-currency [dataRate]="rates[1]" ></app-currency>
+  </div>
+  <div class="dateWrapper">
+    <label for="date">Дата</label>
+    <input [(ngModel)]="dateValue"   (ngModelChange)="setDate(dateValue = $event)" type="date" name="date" id="date" class="dataInput" min="2020-11-28" [max]="maxDate" >
+  </div>
+</div>

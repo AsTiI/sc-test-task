@@ -1,0 +1,31 @@
+<div class="currencySearchContainer">
+  <div class="inputCurrency" (click)="!showPopularCurrencies? onSearch(): onCloseSearch()">
+    <div class="currencyFlag">
+      <img *ngIf="showPopularCurrencies"
+           class="flagImage" src='./assets/search.png'  alt="flag">
+      <ng-container *ngIf="!showPopularCurrencies">
+        <img class="flagImage"
+             [src]="'https://countryflagsapi.com/png/' + currentCurrencyValue.code.substr(0,2)"
+             (error)="handleMissingImage($event)">
+      </ng-container>
+    </div>
+    <input class="searchCurrency"
+           [(ngModel)]="search"
+           type="search" >
+    <span *ngIf="showPopularCurrencies" class="firstSpan"></span>
+    <span *ngIf="!showPopularCurrencies" class="secondSpan"></span>
+  </div>
+  <div *ngIf="showPopularCurrencies" class="currencyList">
+    <p>Популярные</p>
+    <ng-container *ngFor="let item of (currencies | filter:search) as folder">
+      <div class="currencyListItem" (click)="chooseCurrency(item)" >
+        <app-flags [flagId]="item.code.substr(0,2)"></app-flags>
+        {{item.code}}
+        {{item.name}}
+      </div>
+    </ng-container>
+    <div class="notFound" *ngIf="(currencies | filter:search).length <1">
+      Not Found
+    </div>
+  </div>
+</div>
