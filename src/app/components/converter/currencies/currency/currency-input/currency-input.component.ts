@@ -69,31 +69,16 @@ export class CurrencyInputComponent {
     this.valueSubscription.unsubscribe();
     this.ratesSubscription.unsubscribe();
   }
+
   returnStoreRates(){
     if(this.rates[0].code == this.dataRate.code){
-      this.rates = [{
-          code: this.dataRate.code,
-          rate: (parseFloat(this.rates[1].rate) / parseFloat(this.rates[0].rate)).toString(),
-        },
-        {
-          code: this.rates[0].code,
-          rate: '1',
-        }]
+      this.currentValue = this.value[0].value;
     } else {
-      this.rates = [{
-        code: this.rates[0].code,
-        rate: '1',
-
-      },
-        {
-          code: this.dataRate.code,
-          rate: (parseFloat(this.rates[1].rate) / parseFloat(this.rates[0].rate)).toString(),
-        }]
+      this.currentValue = this.value[1].value
     }
-    this.dataRate.rate = '1';
-    this.storeRates.dispatch(new SetRate(this.rates))
   }
   updateStoreRates(){
+    this.currentValue = ''
     if(this.rates[0].code == this.dataRate.code){
       this.rates = [{
         code: this.dataRate.code,
@@ -115,11 +100,10 @@ export class CurrencyInputComponent {
     }
     this.dataRate.rate = '1';
     this.storeRates.dispatch(new SetRate(this.rates))
+
   }
 
-
   updateStoreValue(inputValue: string) : void{
-    // console.log(this.value)
     if (this.rates[0].code == this.dataRate.code) {
       this.value = [{
           code: this.rates[0].code,
@@ -127,20 +111,18 @@ export class CurrencyInputComponent {
       },
         {
           code: this.rates[1].code,
-          value: inputValue? parseFloat((parseFloat(inputValue) * parseFloat(this.rates[1].rate)).toString()).toFixed(3).toString(): '',
+          value: inputValue? parseFloat((parseFloat(inputValue) * parseFloat(this.rates[1].rate)).toString()).toFixed(2).toString(): '',
       }]
     } else {
       this.value = [{
           code: this.rates[0].code,
-          value: inputValue?parseFloat((parseFloat(inputValue) * parseFloat(this.rates[0].rate)).toString()).toFixed(3).toString(): '',
+          value: inputValue?parseFloat((parseFloat(inputValue) * parseFloat(this.rates[0].rate)).toString()).toFixed(2).toString(): '',
       },
         {
           code: this.rates[1].code,
           value: inputValue,
         }]
     }
-    // console.log(this.value)
-
     this.storeValue.dispatch(new SetValue(this.value));
   }
 }

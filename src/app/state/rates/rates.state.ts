@@ -7,7 +7,7 @@ import { Selector } from '@ngxs/store';
 @State<RatesDateModel>({
   name: 'rates',
   defaults:{
-    updated_date: new Date().toLocaleDateString(),
+    updated_date: '2022-10-26',
     rates: [
       {
         code: 'EUR',
@@ -32,14 +32,7 @@ export class RatesState {
       rates: action.payload
     })
   }
-  @Action(UpdateRates)
-  updateRates(ctx: StateContext<RatesDateModel>, action: UpdateRates) {
-    const state = ctx.getState();
-    ctx.setState({
-      ...state,
-      rates: action.payload,
-    })
-  }
+
   @Action(UpdateDate)
   updateDate(ctx: StateContext<RatesDateModel>, action: UpdateDate){
     const state = ctx.getState();
@@ -59,10 +52,6 @@ export class RatesState {
   }
   @Selector()
   static ratesData(state: RatesDateModel) {
-    let ratesArr: {code: string, rate: string}[] = [];
-    for(let key in state.rates){
-      ratesArr.push({code: state.rates[key].code, rate: state.rates[key].rate})
-    }
-    return [state.updated_date, ratesArr];
+    return state.updated_date;
   }
 }

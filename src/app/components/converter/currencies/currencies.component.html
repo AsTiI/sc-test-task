@@ -6,6 +6,6 @@
   </div>
   <div class="dateWrapper">
     <label for="date">Дата</label>
-    <input [(ngModel)]="dateValue"   (ngModelChange)="setDate(dateValue = $event)" type="date" name="date" id="date" class="dataInput" min="2020-11-28" [max]="maxDate" >
+    <input [(ngModel)]="dateValue"   (ngModelChange)="setDate($event)" type="date" name="date" id="date" class="dataInput" min="2020-11-28" [max]="maxDate" >
   </div>
 </div>
