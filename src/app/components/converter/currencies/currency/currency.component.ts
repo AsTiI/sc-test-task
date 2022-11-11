@@ -8,7 +8,14 @@ import { Component, Input} from '@angular/core';
 
 export class CurrencyComponent {
 
-  @Input() dataRate = {code: '', rate: ''};
+  @Input() dataValue = {
+    currency: {
+      code: '',
+      fullName: '',
+    },
+    rates: '',
+    count: '',
+  };
 
   constructor() {}
 

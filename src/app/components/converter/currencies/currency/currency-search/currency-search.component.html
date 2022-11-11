@@ -3,14 +3,7 @@
     <div class="currencyFlag">
       <img *ngIf="showPopularCurrencies"
            class="search" src='./assets/search.png'  alt="flag">
-<!--      <ng-container *ngIf="!showPopularCurrencies">-->
-<!--        <img class="flagImage"-->
-<!--             [src]="'https://countryflagsapi.com/png/' + currentCurrencyValue.code.substr(0,2)"-->
-<!--             (error)="handleMissingImage($event)">-->
-<!--      </ng-container>-->
       <app-flags *ngIf="!showPopularCurrencies"  [flagId]="currentCurrencyValue.code.substr(0,2)" ></app-flags>
-
-
     </div>
     <input class="searchCurrency"
            [(ngModel)]="search"
@@ -20,14 +13,14 @@
   </div>
   <div *ngIf="showPopularCurrencies" class="currencyList">
     <p>Популярные</p>
-    <ng-container *ngFor="let item of (currencies | filter:search) as folder">
+    <ng-container *ngFor="let item of (currency.currencies | filter:search) as folder">
       <div class="currencyListItem" (click)="chooseCurrency(item)" >
         <app-flags [flagId]="item.code.substr(0,2)" ></app-flags>
-        {{item.code}}
-        {{item.name}}
+        <span>{{item.code}}</span>
+        {{item.fullName}}
       </div>
     </ng-container>
-    <div class="notFound" *ngIf="(currencies | filter:search).length <1">
+    <div class="notFound" *ngIf="(currency.currencies | filter:search).length <1">
       Not Found
     </div>
   </div>

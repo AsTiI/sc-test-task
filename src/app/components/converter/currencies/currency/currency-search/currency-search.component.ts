@@ -1,34 +1,21 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-import { ValueState } from './../../../../../state/value/value.state';
-import { CurrencyState } from './../../../../../state/currency/currency.state';
-import { RatesState } from './../../../../../state/rates/rates.state'
+import { CurrencyState } from './../../../../../state/currency.state';
 import { Select, Store } from '@ngxs/store';
 import { Observable, Subscription } from 'rxjs';
-import { CurrenciesModel } from './../../../../../state/currency/currency.model';
 import { map, catchError} from 'rxjs/operators';
 
 import {
-  SetRate,
-  UpdateRates
-} from './../../../../../state/rates/rates.actions'
-import {
-  SetValue,
-} from '../../../../../state/value/value.actions'
+  SetValues,
+} from './../../../../../state/currency.actions'
+
 
 class Currency{
   constructor(
     public code: string,
-    public name: string,
+    public fullName: string,
   ) {}
-}
-class Rate{
-  constructor(
-    public code: string,
-    public rate: string,
-  ) {
-  }
 }
 
 @Component({
@@ -37,57 +24,75 @@ class Rate{
   styleUrls: ['./currency-search.component.scss']
 })
 export class CurrencySearchComponent implements OnInit {
-  @Select(CurrencyState.currencies) currencies$!: Observable<Currency[]>;
-  @Select(RatesState.rates) rates$!: Observable<Rate[]>;
-  @Select(ValueState.value) value$!: Observable<{code: string, value: string}[]>;
-  @Select(RatesState.ratesData) ratesData$!: Observable<string>;
+  private currenciesApiKey = '135cf9bf129e0a9aed44050143e2d36d2f3ba2b2';
 
-  private currenciesApiKey = '0e92cb399c53f7f7b25ade450bfec9bead566d36';
-
+  @Select(CurrencyState.currency) currency$!: Observable<{
+    date: string,
+    currencies: {
+      code: string,
+      fullName: string,
+    }[],
+    values: {
+      currency: {
+        code: string,
+        fullName: string,
+      },
+      rates: string,
+      count: string,
+    }[],
+  }>;
   private currencySubscription: Subscription;
-  private ratesSubscription: Subscription;
-  private valueSubscription: Subscription;
-  private ratesDataSubscription: Subscription;
 
-  value!: {code: string, value: string}[];
-  currencies: Currency[] = [];
-  rates!: Rate[];
-  ratesData!: string;
-  @Input() dataCode = '';
+  currency!: {
+    date: string,
+    currencies: {
+      code: string,
+      fullName: string,
+    }[],
+
+    values: {
+      currency: {
+        code: string,
+        fullName: string,
+      },
+      rates: string,
+      count: string,
+    }[],
+  };
+
+  @Input() dataCode = {
+    currency: {
+      code: '',
+      fullName: '',
+    },
+    rates: '',
+    count: '',
+  };
   search!: string;
-
   showPopularCurrencies: boolean;
-
   currentCurrencyValue!: Currency;
 
-  constructor(private httpClient: HttpClient, private storeCurrency: Store, private storeRates: Store, private storeValue: Store) {
-    this.ratesDataSubscription = this.ratesData$.subscribe((data: string) => {
-      this.ratesData = data;
-    })
-    this.currencySubscription = this.currencies$.subscribe((currencies: Currency[]) => {
-      this.currencies = currencies
-      for(let key in this.currencies){
-        if(this.currencies[key].code == this.dataCode){
-          this.currentCurrencyValue = {
-            code: this.currencies[key].code,
-            name: this.currencies[key].name,
-          }
-          this.search = this.currencies[key].code + '  '+ this.currencies[key].name;
-        }
-      }
+  constructor(private httpClient: HttpClient, private storeCurrency: Store) {
+    this.currencySubscription = this.currency$.subscribe((currency: {
+      date: string,
+      currencies: {
+        code: string,
+        fullName: string,
+      }[],
+      values: {
+        currency: {
+          code: string,
+          fullName: string,
+        },
+        rates: string,
+        count: string,
+      }[],
+    }) => {
+      this.currency = currency;
     });
-    this.valueSubscription = this.value$.subscribe((value: {code: string, value: string}[]) => {
-      this.value = value;
-    });
-
-    this.ratesSubscription = this.rates$.subscribe((rates: Rate[]) => {
-      this.rates = rates;
-    })
+    this.search = '';
 
     this.showPopularCurrencies = false;
-    this.search = '';
-    this.currentCurrencyValue = {code: '', name: ''}
-
   }
 
   handleMissingImage(event: Event){
@@ -95,26 +100,74 @@ export class CurrencySearchComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    for(let key in this.currency.values){
+      if(this.currency.values[key].currency.code == this.dataCode.currency.code){
+        this.currentCurrencyValue = {
+          code: this.currency.values[key].currency.code,
+          fullName: this.currency.values[key].currency.fullName,
+        }
+        this.search = this.currency.values[key].currency.code + '  ' + this.currency.values[key].currency.fullName;
+      }
+    }
     this.getCurrenciesRateFromApi()
   }
 
   ngOnDestroy(): void {
     this.currencySubscription.unsubscribe();
-    this.ratesSubscription.unsubscribe();
-    this.valueSubscription.unsubscribe();
-    this.ratesDataSubscription.unsubscribe();
   }
 
-  chooseCurrency(newCurrencyValue: Currency){
-      if(this.rates[0].code == this.currentCurrencyValue.code){
-        this.rates[0].code = newCurrencyValue.code;
+  chooseCurrency(newCurrencyValue: Currency) {
+    if (newCurrencyValue.code != this.currentCurrencyValue.code) {
+      this.currentCurrencyValue.code = newCurrencyValue.code;
+
+      let ratesUrl: string;
+      if (this.dataCode.rates == '1.0000') {
+        ratesUrl = `https://api.getgeoapi.com/v2/currency/historical/${this.currency.date}?api_key=${this.currenciesApiKey}&from=${newCurrencyValue.code}&to=${this.currency.values[1].currency.code}&format=json`;
+      } else {
+        ratesUrl = `https://api.getgeoapi.com/v2/currency/historical/${this.currency.date}?api_key=${this.currenciesApiKey}&from=${this.currency.values[0].currency.code}&to=${newCurrencyValue.code}&format=json`;
       }
-      else{
-        this.rates[1].code = newCurrencyValue.code;
-      }
-    this.currentCurrencyValue.code = newCurrencyValue.code;
-    this.getCurrenciesRateFromApi();
-    this.search = newCurrencyValue.code + '  '+ newCurrencyValue.name;
+      let promise = new Promise((resolve, reject) => {
+        this.httpClient.get(ratesUrl)
+          .toPromise()
+          .then((res: any) => {
+            if (this.dataCode.rates == '1.0000') {
+              this.storeCurrency.dispatch(new SetValues([
+                {
+                  currency: {
+                    code: newCurrencyValue.code,
+                    fullName: newCurrencyValue.fullName,
+                  },
+                  rates: '1.0000',
+                  count: this.currency.values[0].count,
+                }, {
+                  currency: this.currency.values[1].currency,
+                  rates: res['rates'][this.currency.values[1].currency.code]['rate'],
+                  count: (parseFloat(this.currency.values[0].count) * parseFloat(res['rates'][this.currency.values[1].currency.code]['rate'])).toFixed(2).toString(),
+                }]));
+
+            } else {
+              this.storeCurrency.dispatch(new SetValues([
+                {
+                  currency: this.currency.values[0].currency,
+                  rates: '1.0000',
+                  count: this.currency.values[0].count
+                },
+                {
+                  currency: {
+                    code: newCurrencyValue.code,
+                    fullName: newCurrencyValue.fullName
+                  },
+                  rates: res['rates'][newCurrencyValue.code]['rate'],
+                  count: (parseFloat(this.currency.values[0].count) * parseFloat(res['rates'][newCurrencyValue.code]['rate'])).toFixed(2).toString()
+                }]));
+            }
+            resolve(res);
+          }, msg => {
+            alert('You reached the limit of your currency requests for the day');
+          })
+      })
+    }
+    this.search = newCurrencyValue.code + '  '+ newCurrencyValue.fullName;
     this.toggleCurrencyModal()
   }
   toggleCurrencyModal(){
@@ -127,49 +180,46 @@ export class CurrencySearchComponent implements OnInit {
   }
   onCloseSearch() {
     if(this.showPopularCurrencies){
-      this.search = this.currentCurrencyValue.code + '  '+ this.currentCurrencyValue.name;
+      this.search = this.currentCurrencyValue.code + '  '+ this.currentCurrencyValue.fullName;
       this.toggleCurrencyModal()
     }
   }
-  updateRates() {
-    this.storeRates.dispatch((new UpdateRates(this.rates)))
-  }
-  setValues(){
-    this.storeValue.dispatch((new SetValue([{
-      code: this.rates[0].code,
-      value: (parseFloat(this.value[0].value) * parseFloat(this.rates[0].rate)).toFixed(2).toString()
-    },
-      {
-        code: this.rates[1].code,
-        value: (parseFloat(this.value[0].value) * parseFloat(this.rates[1].rate)).toFixed(2).toString(),
-      }])))
-  }
 
   getCurrenciesRateFromApi(){
-
-    let ratesUrl = `https://api.getgeoapi.com/v2/currency/historical/${this.ratesData}?api_key=${this.currenciesApiKey}&from=${this.rates[0].code}&to=${this.rates[1].code}&format=json`;
+    let ratesUrl = `https://api.getgeoapi.com/v2/currency/historical/${this.currency.date}?api_key=${this.currenciesApiKey}&from=${this.currency.values[0].currency.code}&to=${this.currency.values[1].currency.code}&format=json`;
     let promise = new Promise((resolve,reject) => {
         this.httpClient.get(ratesUrl)
           .toPromise()
           .then((res: any) => {
-            for(let key in this.rates){
-              if(this.rates[key].code == res['base_currency_code']){
-                this.rates[key].rate = res['amount'];
+              if(this.currency.values[0].currency.code == res['base_currency_code']){
+                this.storeCurrency.dispatch(new SetValues([
+                  {
+                    currency: this.currency.values[0].currency,
+                    rates: res['amount'],
+                    count: this.currency.values[0].count
+                  }, {
+                  currency: this.currency.values[1].currency,
+                    rates: res['rates'][this.currency.values[1].currency.code]['rate'],
+                    count: (parseFloat(this.currency.values[0].count) * parseFloat(res['rates'][this.currency.values[1].currency.code]['rate'])).toFixed(2).toString(),
+                  }]));
               } else {
-                this.rates[key].rate = res['rates'][this.rates[1].code]['rate'];
+                this.storeCurrency.dispatch(new SetValues([
+                  {
+                    currency: this.currency.values[0].currency,
+                    rates: res['rates'][this.currency.values[0].currency.code]['rate'],
+                    count: (parseFloat(this.currency.values[0].count) * parseFloat(res['rates'][this.currency.values[0].currency.code]['rate'])).toFixed(2).toString()
+                  },
+                  {
+                    currency: this.currency.values[1].currency,
+                    rates: res['amount'],
+                    count: this.currency.values[1].count
+                  }]));
               }
-            }
-
-            this.updateRates();
-            this.setValues();
           resolve(res);
         }, msg => {
             alert('You reached the limit of your currency requests for the day');
           })
     })
-
   }
-
-
 
 }

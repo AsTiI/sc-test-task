@@ -5,10 +5,10 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class FilterPipe implements PipeTransform {
 
-  transform(value: any, searchValue:string): any {
-    return value.filter((v:any) =>
+  transform(value: {code: string, fullName: string}[], searchValue:string): any {
+    return value.filter((v:{code: string, fullName: string}) =>
       v.code.toLowerCase().indexOf(searchValue.toLowerCase()) > -1 ||
-      v.name.toLowerCase().indexOf(searchValue.toLowerCase()) > -1)
+      v.fullName.toLowerCase().indexOf(searchValue.toLowerCase()) > -1)
   }
 }
 
