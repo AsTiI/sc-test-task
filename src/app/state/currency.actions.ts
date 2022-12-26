@@ -1,24 +1,28 @@
 import { Value, Currency } from './currency.model'
 
-export class SetValues {
-  static readonly type = '[Currency] Set values';
-  constructor(public payload: Value[]) {
-  }
-}
-export class SetCurrencies {
-  static readonly  type = '[Currensies] Set currencies';
-  constructor(public payload: Currency[]) {
-  }
-}
-
-export class SetDate {
-  static readonly type = '[Date] Set date';
+export class UpdateDate {
+  static readonly type = '[Date] Update date';
   constructor(public payload: string) {
   }
 }
 
-export class SetDateRate {
-  static readonly  type = '[DateRate] Set date rate';
-  constructor(public payload: string) {
+export class SetInitialValues {
+  static readonly type = '[InitialValues] Set initial values';
+  constructor() {
+  }
+}
+export class UpdateValues {
+  static readonly type = '[UpdateValues] Update values';
+  constructor(public payload: [code: string, value: string]) {
+  }
+}
+export class UpdateCurrency {
+  static readonly type = '[UpdateCurrency] Update currency';
+  constructor(public payload: Currency, public previousCode: string) {
+  }
+}
+export  class SwapCurrencies {
+  static readonly type = '[SwapCurrencies] Swap currencies';;
+  constructor() {
   }
 }

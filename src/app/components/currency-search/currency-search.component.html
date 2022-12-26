@@ -2,7 +2,7 @@
   <div class="inputCurrency" (click)="!showPopularCurrencies? onSearch(): onCloseSearch()">
     <div class="currencyFlag">
       <img *ngIf="showPopularCurrencies"
-           class="search" src='./assets/search.png'  alt="flag">
+           class="search" src='assets/search.png' alt="flag">
       <app-flags *ngIf="!showPopularCurrencies"  [flagId]="currentCurrencyValue.code.substr(0,2)" ></app-flags>
     </div>
     <input class="searchCurrency"
@@ -12,16 +12,23 @@
     <span *ngIf="!showPopularCurrencies" class="secondSpan"></span>
   </div>
   <div *ngIf="showPopularCurrencies" class="currencyList">
-    <p>Популярные</p>
-    <ng-container *ngFor="let item of (currency.currencies | filter:search) as folder">
+    <p>Список валют</p>
+    <ng-container *ngFor="let item of (currency.currencies | filter: search) as folder">
       <div class="currencyListItem" (click)="chooseCurrency(item)" >
         <app-flags [flagId]="item.code.substr(0,2)" ></app-flags>
-        <span>{{item.code}}</span>
-        {{item.fullName}}
+        <span>{{ item.code }}</span>
+        {{ item.fullName }}
       </div>
     </ng-container>
-    <div class="notFound" *ngIf="(currency.currencies | filter:search).length <1">
-      Not Found
+    <div class="notFound" *ngIf="(currency.currencies | filter: search).length <1">
+      <p>Not Found</p>
     </div>
+  </div>
+  <div class="popularCurrencies">
+    <ul>
+      <ng-container *ngFor="let item of dataCode.popularCurrencies" >
+        <li (click)="choosePopularCurrency(item)">{{ item.code }}</li>
+      </ng-container>
+    </ul>
   </div>
 </div>

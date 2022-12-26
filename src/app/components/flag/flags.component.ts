@@ -10,6 +10,6 @@ export class FlagsComponent {
   constructor() {}
 
   handleMissingImage(event: Event){
-    (event.target as HTMLImageElement).src = 'https://avatanplus.com/files/resources/original/5cadb6ffe1bf016a0692d7b5.jpg';
+    (event.target as HTMLImageElement).src = 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Blank.jpg';
   }
 }

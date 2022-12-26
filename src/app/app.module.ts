@@ -12,21 +12,15 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 
 import { AppComponent } from './app.component';
-import { ConverterComponent } from './components/converter/converter.component';
-import { CurrenciesComponent } from './components/converter/currencies/currencies.component';
-import { CurrencyComponent } from './components/converter/currencies/currency/currency.component';
-import { CurrencyInputComponent } from './components/converter/currencies/currency/currency-input/currency-input.component';
-import { CurrencySearchComponent } from './components/converter/currencies/currency/currency-search/currency-search.component';
-import { FlagsComponent } from './components/converter/currencies/currency/currency-search/flags/flags.component';
+import { CurrencyInputComponent } from './components/currency-input/currency-input.component';
+import { CurrencySearchComponent } from './components/currency-search/currency-search.component';
+import { FlagsComponent } from './components/flag/flags.component';
 import { FilterPipe, ValuePipe } from './pipes/filter.pipe';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
     AppComponent,
-    ConverterComponent,
-    CurrenciesComponent,
-    CurrencyComponent,
     CurrencyInputComponent,
     CurrencySearchComponent,
     FlagsComponent,
