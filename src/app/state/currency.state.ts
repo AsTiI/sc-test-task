@@ -17,7 +17,7 @@ import { HttpClient } from '@angular/common/http';
           fullName: 'Euro',
         },
         rates: '1.0000',
-        count:  '1.00',
+        count:  '0.00',
         popularCurrencies: [
           {
             code: 'EUR',
@@ -38,7 +38,7 @@ import { HttpClient } from '@angular/common/http';
           fullName: 'United States Dollar',
         },
         rates: '1.0600',
-        count: '1.06',
+        count: '0.00',
         popularCurrencies: [{
           code: 'USD',
           fullName: 'United States Dollar'
@@ -118,15 +118,11 @@ export class CurrencyState {
         values: [{
           ...state.values[0],
           currency: state.values[1].currency,
-          // rates: state.values[0].rates,
-          // count: state.values[0].count,
           popularCurrencies: state.values[1].popularCurrencies,
         },
           {
             ...state.values[0],
             currency: state.values[0].currency,
-            // rates: state.values[0].rates,
-            // count: state.values[0].count,
             rates: ((parseFloat(state.values[0].rates) / parseFloat(state.values[1].rates)).toFixed(4)).toString(),
             count: ((parseFloat(state.values[0].count) / parseFloat(state.values[1].rates)).toFixed(2)).toString(),
             popularCurrencies: state.values[0].popularCurrencies,
@@ -141,43 +137,22 @@ export class CurrencyState {
     const rateDate = date.getFullYear() + '-' + (date.getMonth()+1) + '-' + date.getDate();
     const ratesUrl = `https://api.getgeoapi.com/v2/currency/historical/${ rateDate }?api_key=${ this.currenciesApiKey }&from=${ state.values[0].currency.code }&to=${ state.values[1].currency.code }&format=json`;
     this.httpClient.get(ratesUrl).subscribe((res: any) => {
-      if(state.values[0].currency.code == res['base_currency_code']){
-        ctx.setState({
-          ...state,
-          date: action.payload,
-          values: [{
-            currency: state.values[0].currency,
-            rates: res['amount'],
-            count: state.values[0].count,
-            popularCurrencies: state.values[0].popularCurrencies,
-          },
-            {
-              currency: state.values[1].currency,
-              rates: res['rates'][state.values[1].currency.code]['rate'],
-              count: (parseFloat(state.values[0].count) * parseFloat(res['rates'][state.values[1].currency.code]['rate'])).toFixed(2).toString(),
-              popularCurrencies: state.values[1].popularCurrencies,
-            }]
-        })
-      } else {
-        if(state.values[0].currency.code == res['base_currency_code']){
-          ctx.setState({
-            ...state,
-            date: action.payload,
-            values: [{
-              currency: state.values[0].currency,
-              rates: res['rates'][state.values[0].currency.code]['rate'],
-              count: (parseFloat(state.values[0].count) * parseFloat(res['rates'][state.values[0].currency.code]['rate'])).toFixed(2).toString(),
-              popularCurrencies: state.values[0].popularCurrencies,
-            },
-              {
-                currency: state.values[1].currency,
-                rates: res['amount'],
-                count: state.values[1].count,
-                popularCurrencies: state.values[1].popularCurrencies,
-              }]
-          })
-        }
-      }
+      ctx.setState({
+        ...state,
+        date: action.payload,
+        values: [{
+          currency: state.values[0].currency,
+          rates: res['amount'],
+          count: state.values[0].count,
+          popularCurrencies: state.values[0].popularCurrencies,
+        },
+          {
+            currency: state.values[1].currency,
+            rates: res['rates'][state.values[1].currency.code]['rate'],
+            count: (parseFloat(state.values[0].count) * parseFloat(res['rates'][state.values[1].currency.code]['rate'])).toFixed(2).toString(),
+            popularCurrencies: state.values[1].popularCurrencies,
+          }]
+      })
     })
   }
 
@@ -237,7 +212,6 @@ export class CurrencyState {
             }],
         })
         this.updateLocalStorage(popularCurrencies)
-
       } else {
         for(let key in state.values[1].popularCurrencies){
           popularCurrencies[1].push(state.values[1].popularCurrencies[key])
@@ -251,7 +225,6 @@ export class CurrencyState {
         }
         popularCurrencies[1].splice(3);
         popularCurrencies[0] = ctx.getState().values[0].popularCurrencies;
-
 
         ctx.setState({
           ...state,
@@ -270,9 +243,8 @@ export class CurrencyState {
 
             }],
         })
+        this.updateLocalStorage(popularCurrencies)
       }
-      this.updateLocalStorage(popularCurrencies)
-
     })
   }
 
