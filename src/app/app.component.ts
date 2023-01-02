@@ -67,16 +67,16 @@ export class AppComponent implements OnInit {
 
   getDate(): string{
     let today = new Date();
-    let dd = today.getDate();
-    let mm = today.getMonth() + 1;
-    let yyyy = today.getFullYear();
-    if(dd < 10){
-      dd = parseInt('0' + dd.toString())
+    let dd = (today.getDate()).toString();
+    let mm = (today.getMonth() + 1).toString();
+    let yyyy = today.getFullYear().toString();
+    if(parseInt(dd) < 10){
+      dd = '0' + dd.toString()
     }
-    if(mm < 10){
-      mm = parseInt('0' + mm.toString())
+    if(parseInt(mm) < 10){
+      mm = '0' + mm.toString()
     }
-    return yyyy.toString() + '-' + mm.toString() + '-' + dd.toString()
+    return yyyy + '-' + mm + '-' + dd
   }
   swapCurrencies(){
     this.storeCurrency.dispatch(new SwapCurrencies());
