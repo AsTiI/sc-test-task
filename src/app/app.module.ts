@@ -15,7 +15,7 @@ import { AppComponent } from './app.component';
 import { CurrencyInputComponent } from './components/currency-input/currency-input.component';
 import { CurrencySearchComponent } from './components/currency-search/currency-search.component';
 import { FlagsComponent } from './components/flag/flags.component';
-import { FilterPipe, ValuePipe } from './pipes/filter.pipe';
+import { FilterPipe } from './pipes/filter.pipe';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
@@ -24,8 +24,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     CurrencyInputComponent,
     CurrencySearchComponent,
     FlagsComponent,
-    FilterPipe,
-    ValuePipe
+    FilterPipe
   ],
   imports: [
     BrowserModule,

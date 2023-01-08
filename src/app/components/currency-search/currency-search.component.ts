@@ -5,36 +5,11 @@ import { Select, Store } from '@ngxs/store';
 import { Observable, Subscription } from 'rxjs';
 import { map, catchError} from 'rxjs/operators';
 
+import { CurrencyStateModel,  Currency, CurrencyDescription, CurrencyValues, LocalStorage } from '../../state/currency.model';
+
 import {
   UpdateCurrency
 } from '../../state/currency.actions'
-
-
-class CurrentCurrency{
-  constructor(
-    public code: string,
-    public fullName: string,
-  ) {}
-}
-class Currency {
-  constructor(
-    public date: string,
-    public currencies: {
-      code: string,
-      fullName: string,
-    }[],
-    public values: {
-      currency: {
-        code: string,
-        fullName: string,
-      },
-      rates: string,
-      count: string,
-      popularCurrencies: CurrentCurrency[],
-    }[],
-  ) {
-  }
-}
 
 @Component({
   selector: 'app-currency-search',
@@ -43,41 +18,61 @@ class Currency {
 })
 export class CurrencySearchComponent implements OnInit {
 
-  @Select(CurrencyState.currency) currency$!: Observable<Currency>;
+  @Select(CurrencyState.currency) currency$!: Observable<CurrencyStateModel>;
   private currencySubscription!: Subscription;
 
-  currency!: Currency;
+  currency!: CurrencyStateModel;
 
   @Input() dataCode = {
-    currency: {
-      code: '',
+    description: {
+      abbr: '',
       fullName: '',
     },
-    rates: '',
-    count: '',
-    popularCurrencies: [{code: '', fullName: ''}, {code: '', fullName: ''}, {code: '', fullName: ''}],
+    values: {
+      rates: 0.0000,
+      count: 0.0000,
+    },
+    popularCurrencies: [
+      {
+        abbr: '',
+        fullName: ''
+      },
+      {
+        abbr: '',
+        fullName: ''
+      },
+      {
+        abbr: '',
+        fullName: ''
+      },
+    ],
   };
 
   search!: string;
   showPopularCurrencies!: boolean;
-  currentCurrencyValue!: CurrentCurrency;
+  currentCurrencyValue!: {
+    description: CurrencyDescription,
+    popularCurrencies: CurrencyDescription[]
+  };
 
   constructor(private storeCurrency: Store) {}
 
   ngOnInit(): void {
     this.showPopularCurrencies = false;
-    this.currencySubscription = this.currency$.subscribe((currency: Currency) => {
+    this.currencySubscription = this.currency$.subscribe((currency: CurrencyStateModel) => {
       this.currency = currency;
-      if(this.dataCode.rates == '1.0000') {
-        this.currentCurrencyValue = new CurrentCurrency(currency.values[0].currency.code, currency.values[0].currency.fullName)
-      }
-      else {
-        this.currentCurrencyValue = new CurrentCurrency(currency.values[1].currency.code, currency.values[1].currency.fullName)
-      }
-      this.search = this.currentCurrencyValue.code + '  ' + this.currentCurrencyValue.fullName;
+      this.currentCurrencyValue = this.dataCode.values.rates == 1.0000?
+        {
+          description: currency.leftSideCurrency.description,
+          popularCurrencies: currency.popularCurrencies.leftSideCurrency,
+        }:
+        {
+          description: currency.rightSideCurrency.description,
+          popularCurrencies: currency.popularCurrencies.rightSideCurrency,
+        };
+      this.search = this.currentCurrencyValue.description.abbr + '  ' + this.currentCurrencyValue.description.fullName;
 
     });
-
   }
   ngOnDestroy(): void {
     this.currencySubscription.unsubscribe();
@@ -86,17 +81,17 @@ export class CurrencySearchComponent implements OnInit {
   handleMissingImage(event: Event){
     (event.target as HTMLImageElement).src = 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Blank.jpg';
   }
-  chooseCurrency(newCurrencyValue: CurrentCurrency) {
-    if (newCurrencyValue.code != this.currentCurrencyValue.code) {
-      this.storeCurrency.dispatch(new UpdateCurrency(newCurrencyValue, this.currentCurrencyValue.code))
-      this.currentCurrencyValue = newCurrencyValue;
+  chooseCurrency(newCurrencyValue: CurrencyDescription) {
+    if (newCurrencyValue.abbr != this.currentCurrencyValue.description.abbr) {
+      this.storeCurrency.dispatch(new UpdateCurrency(newCurrencyValue, this.currentCurrencyValue.description.abbr))
+      this.currentCurrencyValue.description = newCurrencyValue;
     }
     this.onCloseSearch();
   }
-  choosePopularCurrency(popularCurrency: CurrentCurrency) {
-    this.storeCurrency.dispatch(new UpdateCurrency(popularCurrency, this.currentCurrencyValue.code))
-    this.currentCurrencyValue = popularCurrency;
-    this.search = this.currentCurrencyValue.code + '  '+ this.currentCurrencyValue.fullName;
+  choosePopularCurrency(popularCurrency: CurrencyDescription) {
+    this.storeCurrency.dispatch(new UpdateCurrency(popularCurrency, this.currentCurrencyValue.description.abbr))
+    this.currentCurrencyValue.description = popularCurrency;
+    this.search = this.currentCurrencyValue.description.abbr + '  '+ this.currentCurrencyValue.description.fullName;
   }
   onSearch(){
     this.search = '';
@@ -104,7 +99,7 @@ export class CurrencySearchComponent implements OnInit {
   }
   onCloseSearch() {
     if(this.showPopularCurrencies){
-      this.search = this.currentCurrencyValue.code + '  '+ this.currentCurrencyValue.fullName;
+      this.search = this.currentCurrencyValue.description.abbr + '  '+ this.currentCurrencyValue.description.fullName;
       this.toggleCurrencyModal()
     }
   }

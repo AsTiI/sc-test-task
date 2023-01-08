@@ -2,26 +2,17 @@ import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { CurrencyState } from '../../state/currency.state';
 import { Select, Store } from '@ngxs/store';
 import { Observable, Subscription } from 'rxjs';
+
+import { CurrencyStateModel,  Currency, CurrencyDescription, CurrencyValues, LocalStorage } from '../../state/currency.model';
+
 import {
   UpdateValues,
-} from '../../state/currency.actions'
+} from '../../state/currency.actions';
 
-  class Currency {
-    constructor(
-      public code: string,
-      public value: string,) {
-    }
-  }
-  class Values {
-      constructor(
-        public currency: {
-          code: string,
-          fullName: string,
-        },
-        public rates: string,
-        public count: string,) {
-      }
-  }
+interface sideCurrencyValuesModel {
+  leftSideCurrency: Currency,
+  rightSideCurrency: Currency,
+}
 
 @Component({
   selector: 'app-currency-input',
@@ -30,34 +21,59 @@ import {
 })
 
 export class CurrencyInputComponent implements  OnInit {
-  @Select(CurrencyState.values) values$!: Observable<Values[]>;
+  @Select(CurrencyState.values) values$!: Observable<sideCurrencyValuesModel>;
   private currencySubscription!: Subscription;
 
-  values!: Values[];
+  values!: sideCurrencyValuesModel;
   currentValue!: Currency;
 
   @Input() dataRate = {
-    currency: {
-      code: '',
+    description: {
+      abbr: '',
       fullName: '',
     },
-    rates: '',
-    count: '',
-    popularCurrencies: [{code: '', fullName: ''}, {code: '', fullName: ''}, {code: '', fullName: ''}],
+    values: {
+      rates: 0.0000,
+      count: 0.0000,
+    },
+    popularCurrencies: [
+      {
+        abbr: '',
+        fullName: ''
+      },
+      {
+        abbr: '',
+        fullName: ''
+      },
+      {
+        abbr: '',
+        fullName: ''
+      },
+    ],
   };
 
   constructor(private storeCurrency: Store) {}
 
   ngOnInit(): void {
-    this.currencySubscription = this.values$.subscribe((values: Values[]
-    ) => {
+    this.currencySubscription = this.values$.subscribe((values: sideCurrencyValuesModel) => {
       this.values = values;
-      if(this.dataRate.rates == '1.0000'){
-        this.currentValue = { code: this.values[0].currency.code, value: this.values[0].count }
-      }
-      else{
-        this.currentValue = { code: this.values[1].currency.code, value: this.values[1].count }
-      }
+      this.currentValue = this.dataRate.values.rates == 1.0000 ?
+        this.currentValue =
+          {
+            description: values.leftSideCurrency.description,
+            values: {
+              rates: values.leftSideCurrency.values.rates,
+              count: values.leftSideCurrency.values.count
+            }
+          }:
+        this.currentValue =
+          {
+            description: values.rightSideCurrency.description,
+            values: {
+              rates: values.rightSideCurrency.values.rates,
+              count: values.rightSideCurrency.values.count
+            }
+          }
     });
   }
 
@@ -66,6 +82,6 @@ export class CurrencyInputComponent implements  OnInit {
   }
 
   updateStoreValue(inputValue: string) : void{
-    this.storeCurrency.dispatch(new UpdateValues([this.currentValue.code, inputValue]));
+    this.storeCurrency.dispatch(new UpdateValues({ abbr: this.currentValue.description.abbr, count: +inputValue}));
   }
 }

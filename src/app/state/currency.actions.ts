@@ -1,4 +1,4 @@
-import { Value, Currency } from './currency.model'
+import { Currency, CurrencyDescription } from './currency.model'
 
 export class UpdateDate {
   static readonly type = '[Date] Update date';
@@ -13,16 +13,16 @@ export class SetInitialValues {
 }
 export class UpdateValues {
   static readonly type = '[UpdateValues] Update values';
-  constructor(public payload: [code: string, value: string]) {
+  constructor(public payload: { abbr: string, count: number }) {
   }
 }
 export class UpdateCurrency {
   static readonly type = '[UpdateCurrency] Update currency';
-  constructor(public payload: Currency, public previousCode: string) {
+  constructor(public payload: CurrencyDescription, public previousCode: string) {
   }
 }
 export  class SwapCurrencies {
-  static readonly type = '[SwapCurrencies] Swap currencies';;
+  static readonly type = '[SwapCurrencies] Swap currencies';
   constructor() {
   }
 }

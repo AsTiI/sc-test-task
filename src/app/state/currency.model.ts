@@ -1,17 +1,27 @@
+export interface CurrencyStateModel {
+  date: string,
+  leftSideCurrency: Currency,
+  rightSideCurrency: Currency,
+  currenciesList: CurrencyDescription[],
+  popularCurrencies: LocalStorage,
+}
+
 export interface Currency {
-  code: string,
+  description: CurrencyDescription,
+  values: CurrencyValues,
+}
+
+export interface CurrencyDescription {
+  abbr: string,
   fullName: string,
 }
 
-export interface Value {
-  currency: Currency,
-  rates: string,
-  count: string,
-  popularCurrencies: Currency[],
+export interface CurrencyValues {
+  rates: number,
+  count: number,
 }
 
-export interface CurrencyModel {
-  date: string,
-  currencies: Currency[],
-  values: Value[],
+export interface LocalStorage {
+  leftSideCurrency: CurrencyDescription[],
+  rightSideCurrency: CurrencyDescription[],
 }

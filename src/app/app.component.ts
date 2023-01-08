@@ -3,33 +3,24 @@ import { Component, OnInit, Input} from '@angular/core';
 import { CurrencyState } from '../app/state/currency.state';
 import { Select, Store } from '@ngxs/store';
 import { Observable, Subscription } from 'rxjs';
+
+import { CurrencyStateModel,  Currency, CurrencyDescription, CurrencyValues, LocalStorage } from './state/currency.model';
+
 import {
   UpdateDate, SetInitialValues, SwapCurrencies
 } from '../app/state/currency.actions'
-class CurrentCurrency{
-  constructor(
-    public code: string,
-    public fullName: string,
-  ) {}
-}
- class Currency {
-  constructor(
-    public date: string,
-    public currencies: {
-      code: string,
-      fullName: string,
-    }[],
-    public values: {
-      currency: {
-        code: string,
-        fullName: string,
-      },
-      rates: string,
-      count: string,
-      popularCurrencies: CurrentCurrency[],
-    }[],
-  ) {
-  }
+
+interface sideCurrencyValuesModel {
+  leftSideCurrency: {
+    description: CurrencyDescription,
+    values: CurrencyValues,
+    popularCurrencies: CurrencyDescription[]
+  },
+  rightSideCurrency: {
+    description: CurrencyDescription,
+    values: CurrencyValues,
+    popularCurrencies: CurrencyDescription[]
+  },
 }
 
 @Component({
@@ -37,13 +28,15 @@ class CurrentCurrency{
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
+
 export class AppComponent implements OnInit {
-  @Select(CurrencyState.currency) currency$!: Observable<Currency>;
-  private currencySubscriptor!: Subscription;
+  @Select(CurrencyState.sideCurrencyValues) sideCurrencyValues$!: Observable<sideCurrencyValuesModel>
+  private sideCurrencyValuesSubscriptor!: Subscription;
 
   dateValue: string;
   maxDate: string;
-  currencies!: Currency;
+
+  sideCurrencyValues!: sideCurrencyValuesModel;
 
   constructor(private storeCurrency: Store) {
     this.dateValue = this.getDate();
@@ -51,14 +44,15 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.currencySubscriptor = this.currency$.subscribe((currencies: Currency) => {
-      this.currencies = currencies;
-    })
     this.storeCurrency.dispatch(new SetInitialValues());
+
+    this.sideCurrencyValuesSubscriptor = this.sideCurrencyValues$.subscribe((sideCurrencyValues: sideCurrencyValuesModel) => {
+      this.sideCurrencyValues = sideCurrencyValues;
+    })
   }
 
   ngOnDestroy(): void {
-    this.currencySubscriptor.unsubscribe();
+    this.sideCurrencyValuesSubscriptor.unsubscribe();
   }
 
   updateDate(value: string){

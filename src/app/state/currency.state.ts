@@ -1,259 +1,366 @@
 import { UpdateDate, SetInitialValues, UpdateValues, UpdateCurrency, SwapCurrencies } from './currency.actions'
 import { Injectable } from '@angular/core';
 import { Action, State, StateContext, StateToken } from '@ngxs/store';
-import { CurrencyModel, Value, Currency } from './currency.model';
+import { CurrencyStateModel,  Currency, CurrencyDescription, CurrencyValues, LocalStorage } from './currency.model';
 import { Selector } from '@ngxs/store';
 import { HttpClient } from '@angular/common/http';
 
-@State<CurrencyModel>({
-  name: 'currencies',
+const currenciesApiKey = '135cf9bf129e0a9aed44050143e2d36d2f3ba2b2';
+
+@State<CurrencyStateModel>({
+  name: 'currency',
   defaults:{
     date: '2022-11-08',
-    currencies: [],
-    values: [
-      {
-        currency: {
-          code: 'EUR',
-          fullName: 'Euro',
-        },
-        rates: '1.0000',
-        count:  '0.00',
-        popularCurrencies: [
-          {
-            code: 'EUR',
-            fullName: 'Euro'
-          },
-          {
-            code: 'USD',
-            fullName: 'United State Dollar'
-          },
-          {
-            code: 'BYN',
-            fullName: 'Belarusian Ruble'
-          }],
+    leftSideCurrency: {
+      description: {
+        abbr: 'USD',
+        fullName: 'United States Dollar',
       },
-      {
-        currency: {
-          code: 'USD',
-          fullName: 'United States Dollar',
-        },
-        rates: '1.0600',
-        count: '0.00',
-        popularCurrencies: [{
-          code: 'USD',
-          fullName: 'United States Dollar'
-        },{
-          code: 'EUR',
-          fullName: 'Euro'
-        },{
-          code: 'BYN',
-          fullName: 'Belarusian Ruble'
-        }],
+      values: {
+        rates: 1.0000,
+        count: 1.00,
+      }
+    },
+    rightSideCurrency: {
+      description: {
+        abbr: 'PLN',
+        fullName: 'Polish zloty',
+      },
+      values: {
+        rates: 4.7608,
+        count: 4.76,
+      }
+    },
+    currenciesList: [],
+    popularCurrencies: {
+      leftSideCurrency: [{
+        abbr: 'USD',
+        fullName: 'United States Dollar',
+      },{
+        abbr: 'EUR',
+        fullName: 'Euro',
+      },{
+        abbr: 'BYN',
+        fullName: 'Belarusian Ruble',
       }],
+      rightSideCurrency: [{
+        abbr: 'PLN',
+        fullName: 'Polish zloty',
+      },{
+        abbr: 'RUB',
+        fullName: 'Russian rubl',
+      },{
+        abbr: 'JPY',
+        fullName: 'Japanese yen',
+      }]
+    }
+
+    // values: [
+    //   {
+    //     currency: {
+    //       code: 'EUR',
+    //       fullName: 'Euro',
+    //     },
+    //     rates: '1.0000',
+    //     count:  '0.00',
+    //     popularCurrencies: [
+    //       {
+    //         code: 'EUR',
+    //         fullName: 'Euro'
+    //       },
+    //       {
+    //         code: 'USD',
+    //         fullName: 'United State Dollar'
+    //       },
+    //       {
+    //         code: 'BYN',
+    //         fullName: 'Belarusian Ruble'
+    //       }],
+    //   },
+    //   {
+    //     currency: {
+    //       code: 'USD',
+    //       fullName: 'United States Dollar',
+    //     },
+    //     rates: '1.0600',
+    //     count: '0.00',
+    //     popularCurrencies: [{
+    //       code: 'USD',
+    //       fullName: 'United States Dollar'
+    //     },{
+    //       code: 'EUR',
+    //       fullName: 'Euro'
+    //     },{
+    //       code: 'BYN',
+    //       fullName: 'Belarusian Ruble'
+    //     }],
+    //   }],
   },
 })
 
 @Injectable()
 export class CurrencyState {
-  private currenciesApiKey = '135cf9bf129e0a9aed44050143e2d36d2f3ba2b2';
 
   constructor(private httpClient: HttpClient) {
   }
 
-  updateLocalStorage(popularCurrencies: Currency[][]){
-    localStorage.setItem('popularCurrencies', JSON.stringify([popularCurrencies[0], popularCurrencies[1]]))
+  updateLocalStorage(popularCurrencies: LocalStorage){
+    localStorage.setItem('popularCurrencies', JSON.stringify(popularCurrencies))
+  }
+
+  curryCurrencyApiUrl(curryFunc: Function){
+    return function(date: string) {
+      return function(convertFrom: string, convertTo: string) {
+        return curryFunc(date, convertFrom, convertTo);
+      };
+    };
+  }
+
+  getCurrencyApiUrl(date: string, convertFrom: string, convertTo: string){
+    return `https://api.getgeoapi.com/v2/currency/historical/${ date }?api_key=${ currenciesApiKey }&from=${ convertFrom }&to=${ convertTo }&format=json`;
+  }
+
+  getCorrectDate(newDate: string = new Date().toString()){
+    const date = new Date(newDate);
+    const correctDate = date.getFullYear() + '-' + ( date.getMonth() + 1 ) + '-' + date.getDate();
+    return correctDate;
   }
 
   @Action(SetInitialValues)
-  setInitialValues(ctx: StateContext<CurrencyModel>, httpClient: HttpClient){
-    let popularCurrencies: Currency[][] = [ctx.getState().values[0].popularCurrencies, ctx.getState().values[1].popularCurrencies];
-    const localStorageState = localStorage.getItem('popularCurrencies');
-    !localStorageState ? this.updateLocalStorage( popularCurrencies ) : popularCurrencies = JSON.parse( localStorageState );
-    const date = new Date();
-    const rateDate = date.getFullYear() + '-' + ( date.getMonth() + 1 ) + '-' + date.getDate();
-    const currenciesUrl = `https://api.getgeoapi.com/v2/currency/historical/${ rateDate }?api_key=${ this.currenciesApiKey }&format=json`;
+  setInitialValues(ctx: StateContext<CurrencyStateModel>, httpClient: HttpClient){
+    let popularCurrencies: LocalStorage = {
+      leftSideCurrency: ctx.getState().popularCurrencies.leftSideCurrency,
+      rightSideCurrency: ctx.getState().popularCurrencies.rightSideCurrency
+    }
+    const localStorageData = localStorage.getItem('popularCurrencies');
+    !localStorageData ? this.updateLocalStorage( popularCurrencies ) : popularCurrencies = JSON.parse( localStorageData );
+
+    const rateDate = this.getCorrectDate();
+
+    // const curriedCurrencyApiUrl = this.curryCurrencyApiUrl(this.getCurrencyApiUrl)
+    // const currenciesApiUrl = curriedCurrencyApiUrl(rateDate)
+    // console.log(currenciesApiUrl)
+
+    const currenciesUrl = `https://api.getgeoapi.com/v2/currency/historical/${ rateDate }?api_key=${ currenciesApiKey }&format=json`;
     this.httpClient.get(currenciesUrl).subscribe((res: any) => {
       ctx.setState(state => ({
         ...state,
-        currencies: Object.keys(res['rates']).map(el => {
-          return {code: el, fullName: res['rates'][el]['currency_name']};
+        currenciesList: Object.keys(res['rates']).map(el => {
+          return {
+            abbr: el,
+            fullName: res['rates'][el]['currency_name']
+          };
         }),
       }))
     })
-    const ratesUrl = `https://api.getgeoapi.com/v2/currency/historical/${ rateDate }?api_key=${ this.currenciesApiKey }&from=${ popularCurrencies[0][0].code }&to=${ popularCurrencies[1][0].code }&format=json`;
+    const ratesUrl = this.getCurrencyApiUrl(rateDate, popularCurrencies.leftSideCurrency[0].abbr, popularCurrencies.rightSideCurrency[0].abbr)
+    // const ratesUrl = `https://api.getgeoapi.com/v2/currency/historical/${ rateDate }?api_key=${ currenciesApiKey }&from=${ popularCurrencies[0][0].code }&to=${ popularCurrencies[1][0].code }&format=json`;
     this.httpClient.get(ratesUrl).subscribe((res: any) => {
       const state = ctx.getState();
       ctx.setState({
         ...state,
         date: rateDate,
-        values: [{
-          currency: {
-            code: res['base_currency_code'],
+        leftSideCurrency: {
+          description: {
+            abbr: res['base_currency_code'],
             fullName: res['base_currency_name'],
           },
-          rates: res['amount'],
-          count: parseFloat(res['amount']).toFixed(2).toString(),
-          popularCurrencies: popularCurrencies[0],
+          values: {
+            rates: res['amount'],
+            count: +(parseFloat(res['amount']).toFixed(2)),
+          }
         },
-          {
-            currency: {
-              code: popularCurrencies[1][0].code,
-              fullName: res['rates'][popularCurrencies[1][0].code]['currency_name'],
-            },
-            rates: res['rates'][popularCurrencies[1][0].code]['rate'],
-            count: parseFloat(res['rates'][popularCurrencies[1][0].code]['rate_for_amount']).toFixed(2).toString(),
-            popularCurrencies: popularCurrencies[1],
-          }]
+        rightSideCurrency: {
+          description: {
+            abbr: popularCurrencies.rightSideCurrency[0].abbr,
+            fullName: res['rates'][popularCurrencies.rightSideCurrency[0].abbr]['currency_name'],
+          },
+          values: {
+            rates: res['rates'][popularCurrencies.rightSideCurrency[0].abbr]['rate'],
+            count: +(parseFloat(res['rates'][popularCurrencies.rightSideCurrency[0].abbr]['rate_for_amount']).toFixed(2)),
+          }
+        },
+        popularCurrencies: popularCurrencies,
       })
     })
 
   }
 
   @Action(SwapCurrencies)
-  swapCurrencies(ctx: StateContext<CurrencyModel>) {
-    ctx.setState(state => {
-      this.updateLocalStorage([state.values[1].popularCurrencies, state.values[0].popularCurrencies])
+  swapCurrencies(ctx: StateContext<CurrencyStateModel>) {
+    const state = ctx.getState()
+    ctx.setState((state: any) => {
+      this.updateLocalStorage({ leftSideCurrency: state.popularCurrencies.leftSideCurrency, rightSideCurrency: state.popularCurrencies.rightSideCurrency })
       return ({
         ...state,
-        values: [{
-          ...state.values[0],
-          currency: state.values[1].currency,
-          popularCurrencies: state.values[1].popularCurrencies,
+        leftSideCurrency: {
+          description: state.rightSideCurrency.description,
+          values: state.leftSideCurrency.values,
         },
-          {
-            ...state.values[0],
-            currency: state.values[0].currency,
-            rates: ((parseFloat(state.values[0].rates) / parseFloat(state.values[1].rates)).toFixed(4)).toString(),
-            count: ((parseFloat(state.values[0].count) / parseFloat(state.values[1].rates)).toFixed(2)).toString(),
-            popularCurrencies: state.values[0].popularCurrencies,
-          }]
+        rightSideCurrency: {
+          description: state.leftSideCurrency.description,
+          values: {
+            rates: state.leftSideCurrency.values.rates / state.rightSideCurrency.values.rates,
+            count: +((state.leftSideCurrency.values.rates / state.rightSideCurrency.values.rates).toFixed(2)),
+          }
+        },
+        popularCurrencies: {
+          leftSideCurrency: state.popularCurrencies.rightSideCurrency,
+          rightSideCurrency: state.popularCurrencies.leftSideCurrency,
+        },
       })})
   }
 
   @Action(UpdateDate)
-  updateDate(ctx: StateContext<CurrencyModel>, action: UpdateDate, httpClient: HttpClient) {
+  updateDate(ctx: StateContext<CurrencyStateModel>, action: UpdateDate, httpClient: HttpClient) {
     const state = ctx.getState();
-    const date = new Date(action.payload)
-    const rateDate = date.getFullYear() + '-' + (date.getMonth()+1) + '-' + date.getDate();
-    const ratesUrl = `https://api.getgeoapi.com/v2/currency/historical/${ rateDate }?api_key=${ this.currenciesApiKey }&from=${ state.values[0].currency.code }&to=${ state.values[1].currency.code }&format=json`;
+    const rateDate = this.getCorrectDate(action.payload)
+    const ratesUrl = this.getCurrencyApiUrl(rateDate, state.leftSideCurrency.description.abbr, state.rightSideCurrency.description.abbr)
     this.httpClient.get(ratesUrl).subscribe((res: any) => {
       ctx.setState({
         ...state,
         date: action.payload,
-        values: [{
-          currency: state.values[0].currency,
-          rates: res['amount'],
-          count: state.values[0].count,
-          popularCurrencies: state.values[0].popularCurrencies,
+        leftSideCurrency: {
+          description: state.leftSideCurrency.description,
+          values: {
+            rates: +res['amount'],
+            count: state.leftSideCurrency.values.count,
+          }
         },
-          {
-            currency: state.values[1].currency,
-            rates: res['rates'][state.values[1].currency.code]['rate'],
-            count: (parseFloat(state.values[0].count) * parseFloat(res['rates'][state.values[1].currency.code]['rate'])).toFixed(2).toString(),
-            popularCurrencies: state.values[1].popularCurrencies,
-          }]
+        rightSideCurrency: {
+          description: state.rightSideCurrency.description,
+          values: {
+            rates: res['rates'][state.rightSideCurrency.description.abbr]['rate'],
+            count: +((state.leftSideCurrency.values.count * res['rates'][state.rightSideCurrency.description.abbr]['rate']).toFixed(2)),
+          }
+        },
       })
     })
   }
 
   @Action(UpdateValues)
-  updateValues(ctx: StateContext<CurrencyModel>, action: UpdateValues) {
-    ctx.setState((state) => ({
+  updateValues(ctx: StateContext<CurrencyStateModel>, action: UpdateValues) {
+    const state = ctx.getState()
+    ctx.setState({
       ...state,
-      values: [{
-        ...state.values[0],
-        count: (action.payload[0] == state.values[0].currency.code) ? action.payload[1] : (parseFloat(action.payload[1]) / parseFloat(state.values[1].rates)).toFixed(2).toString(),
-      },{
-        ...state.values[1],
-        count: (action.payload[0] == state.values[1].currency.code) ? action.payload[1] : (parseFloat(action.payload[1]) * parseFloat(state.values[1].rates)).toFixed(2).toString(),
-      }]
-    }))
+      leftSideCurrency: {
+        description: state.leftSideCurrency.description,
+        values: {
+          rates: state.leftSideCurrency.values.rates,
+          count: action.payload.abbr == state.leftSideCurrency.description.abbr ? +(action.payload.count.toFixed(2)) : +((action.payload.count / state.rightSideCurrency.values.rates).toFixed(2)),
+        }
+      },
+      rightSideCurrency: {
+        description: state.rightSideCurrency.description,
+        values: {
+          rates:  state.rightSideCurrency.values.rates,
+          count: action.payload.abbr == state.rightSideCurrency.description.abbr ? +(action.payload.count.toFixed(2)) : +((action.payload.count * state.rightSideCurrency.values.rates).toFixed(2)),
+        },
+      },
+    })
   }
+
   @Action(UpdateCurrency)
-  updateCurrency(ctx: StateContext<CurrencyModel>, action: UpdateCurrency) {
+  updateCurrency(ctx: StateContext<CurrencyStateModel>, action: UpdateCurrency) {
     const state = ctx.getState();
-    let ratesUrl: string;
-    if (action.previousCode == state.values[0].currency.code) {
-      ratesUrl = `https://api.getgeoapi.com/v2/currency/historical/${ state.date }?api_key=${ this.currenciesApiKey }&from=${ action.payload.code }&to=${ state.values[1].currency.code }&format=json`;
-    } else {
-      ratesUrl = `https://api.getgeoapi.com/v2/currency/historical/${ state.date }?api_key=${ this.currenciesApiKey }&from=${ state.values[0].currency.code }&to=${ action.payload.code }&format=json`;
-    }
-    let popularCurrencies: Currency[][] = [[],[]];
+    let ratesUrl: string = action.previousCode == state.leftSideCurrency.description.abbr?
+      this.getCurrencyApiUrl(state.date, action.payload.abbr, state.rightSideCurrency.description.abbr):
+      this.getCurrencyApiUrl(state.date, state.leftSideCurrency.description.abbr, action.payload.abbr);
+
+    let popularCurrencies: LocalStorage = {
+      leftSideCurrency: [],
+      rightSideCurrency: [],
+    };
 
     this.httpClient.get(ratesUrl).subscribe((res: any) => {
-      if (state.values[0].currency.code == action.previousCode) {
-        for(let key in state.values[0].popularCurrencies){
-          popularCurrencies[0].push(state.values[0].popularCurrencies[key])
+      if (state.leftSideCurrency.description.abbr == action.previousCode) {
+        for(let key in state.popularCurrencies.leftSideCurrency){
+          popularCurrencies.leftSideCurrency.push(state.popularCurrencies.leftSideCurrency[key])
         }
-        popularCurrencies[0].unshift(action.payload)
-        for(let i = 1; i < popularCurrencies[0].length; i++){
-          if(popularCurrencies[0][0] == popularCurrencies[0][i]){
-            popularCurrencies[0].splice(i,1);
+        popularCurrencies.leftSideCurrency.unshift(action.payload)
+
+        for(let i = 1; i < popularCurrencies.leftSideCurrency.length; i++){
+          if(popularCurrencies.leftSideCurrency[0] == popularCurrencies.leftSideCurrency[i]){
+            popularCurrencies.leftSideCurrency.splice(i,1);
             break;
           }
         }
-        popularCurrencies[0].splice(3);
-        popularCurrencies[1] = ctx.getState().values[1].popularCurrencies;
+        popularCurrencies.leftSideCurrency.splice(3);
+        popularCurrencies.rightSideCurrency = ctx.getState().popularCurrencies.rightSideCurrency;
         ctx.setState({
           ...state,
-          values: [
-            {
-              ...state.values[0],
-              currency: {
-                code: action.payload.code,
-                fullName: action.payload.fullName,
-              },
-              popularCurrencies: popularCurrencies[0],
+          leftSideCurrency: {
+            description: {
+              abbr: action.payload.abbr,
+              fullName: action.payload.fullName,
             },
-            {
-              ...state.values[1],
-              rates: res['rates'][state.values[1].currency.code]['rate'],
-              count: (parseFloat(state.values[0].count) * parseFloat(res['rates'][state.values[1].currency.code]['rate'])).toFixed(2).toString(),
-            }],
+            values: state.leftSideCurrency.values,
+          },
+          rightSideCurrency: {
+            description: state.rightSideCurrency.description,
+            values: {
+              rates: res['rates'][state.rightSideCurrency.description.abbr]['rate'],
+              count: +(state.leftSideCurrency.values.count * res['rates'][state.rightSideCurrency.description.abbr]['rate']).toFixed(2),
+            },
+          },
+          popularCurrencies: popularCurrencies,
         })
         this.updateLocalStorage(popularCurrencies)
       } else {
-        for(let key in state.values[1].popularCurrencies){
-          popularCurrencies[1].push(state.values[1].popularCurrencies[key])
+        for(let key in state.popularCurrencies.rightSideCurrency){
+          popularCurrencies.rightSideCurrency.push(state.popularCurrencies.rightSideCurrency[key])
         }
-        popularCurrencies[1].unshift(action.payload);
-        for(let i = 1; i < popularCurrencies.length; i++){
-          if(popularCurrencies[1][0] == popularCurrencies[1][i]){
-            popularCurrencies[1].splice(i,1);
+        popularCurrencies.rightSideCurrency.unshift(action.payload);
+        for(let i = 1; i < popularCurrencies.rightSideCurrency.length; i++){
+          if(popularCurrencies.rightSideCurrency[0] == popularCurrencies.rightSideCurrency[i]){
+            popularCurrencies.rightSideCurrency.splice(i,1);
             break;
           }
         }
-        popularCurrencies[1].splice(3);
-        popularCurrencies[0] = ctx.getState().values[0].popularCurrencies;
+        popularCurrencies.rightSideCurrency.splice(3);
+        popularCurrencies.leftSideCurrency = ctx.getState().popularCurrencies.leftSideCurrency;
 
         ctx.setState({
           ...state,
-          values: [
-            {
-              ...state.values[0],
+          rightSideCurrency: {
+            description: {
+              abbr: action.payload.abbr,
+              fullName: action.payload.fullName,
             },
-            {
-              currency: {
-                code: action.payload.code,
-                fullName: action.payload.fullName,
-              },
-              rates: res['rates'][action.payload.code]['rate'],
-              count: (parseFloat(state.values[0].count) * parseFloat(res['rates'][action.payload.code]['rate'])).toFixed(2).toString(),
-              popularCurrencies: popularCurrencies[1],
-
-            }],
+            values: {
+              rates: res['rates'][action.payload.abbr]['rate'],
+              count: +(state.leftSideCurrency.values.count * res['rates'][action.payload.abbr]['rate']).toFixed(2),
+            },
+          },
+          popularCurrencies: popularCurrencies,
         })
+
         this.updateLocalStorage(popularCurrencies)
       }
     })
   }
 
   @Selector()
-  static currency(state: CurrencyModel) {
+  static currency(state: CurrencyStateModel) {
     return state;
   }
   @Selector()
-  static values(state: CurrencyModel) {
-    return state.values
+  static values(state: CurrencyStateModel) {
+    return { leftSideCurrency: state.leftSideCurrency, rightSideCurrency: state.rightSideCurrency }
+  }
+  @Selector()
+  static sideCurrencyValues(state: CurrencyStateModel) {
+    return {
+      leftSideCurrency: {
+        description: state.leftSideCurrency.description,
+        values: state.leftSideCurrency.values,
+        popularCurrencies: state.popularCurrencies.leftSideCurrency,
+      },
+      rightSideCurrency: {
+        description: state.rightSideCurrency.description,
+        values: state.rightSideCurrency.values,
+        popularCurrencies: state.popularCurrencies.rightSideCurrency,
+      }
+    }
   }
 }

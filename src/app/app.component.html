@@ -2,13 +2,13 @@
   <div class="currenciesContainer">
     <div class="currencyWrapper">
       <div class="currencyContainer">
-        <app-currency-search [dataCode]="currencies.values[0]"></app-currency-search>
-        <app-currency-input [dataRate]="currencies.values[0]"></app-currency-input>
+        <app-currency-search [dataCode]="sideCurrencyValues.leftSideCurrency"></app-currency-search>
+        <app-currency-input [dataRate]="sideCurrencyValues.leftSideCurrency"></app-currency-input>
       </div>
       <img (click)="swapCurrencies()" class="arrowsImg" src='assets/arrows.png' alt="arrows">
       <div class="currencyContainer">
-        <app-currency-search [dataCode]="currencies.values[1]"></app-currency-search>
-        <app-currency-input [dataRate]="currencies.values[1]"></app-currency-input>
+        <app-currency-search [dataCode]="sideCurrencyValues.rightSideCurrency"></app-currency-search>
+        <app-currency-input [dataRate]="sideCurrencyValues.rightSideCurrency"></app-currency-input>
       </div>
     </div>
     <div class="dateWrapper">
