@@ -1,11 +1,12 @@
 import { UpdateDate, SetInitialValues, UpdateValues, UpdateCurrency, SwapCurrencies } from './currency.actions'
 import { Injectable } from '@angular/core';
 import { Action, State, StateContext, StateToken } from '@ngxs/store';
-import { CurrencyStateModel,  Currency, CurrencyDescription, CurrencyValues, LocalStorage } from './currency.model';
+import { CurrencyStateModel,  Currency, CurrencyDescription, CurrencyValues, LocalStorage, CurrencyResponceApiModel } from './currency.model';
 import { Selector } from '@ngxs/store';
 import { HttpClient } from '@angular/common/http';
 
 const currenciesApiKey = '135cf9bf129e0a9aed44050143e2d36d2f3ba2b2';
+const currencyApiUrl = 'https://api.getgeoapi.com/v2/currency/historical/';
 
 @State<CurrencyStateModel>({
   name: 'currency',
@@ -76,7 +77,7 @@ export class CurrencyState {
   }
 
   getCurrencyApiUrl(date: string, convertFrom: string, convertTo: string){
-    return `https://api.getgeoapi.com/v2/currency/historical/${ date }?api_key=${ currenciesApiKey }&from=${ convertFrom }&to=${ convertTo }&format=json`;
+    return `${ currencyApiUrl }${ date }?api_key=${ currenciesApiKey }&from=${ convertFrom }&to=${ convertTo }&format=json`;
   }
 
   getCorrectDate(newDate: string = new Date().toString()){
@@ -96,54 +97,48 @@ export class CurrencyState {
 
     const rateDate = this.getCorrectDate();
 
-    const currenciesUrl = `https://api.getgeoapi.com/v2/currency/historical/${ rateDate }?api_key=${ currenciesApiKey }&format=json`;
-    this.httpClient.get(currenciesUrl).subscribe((res: any) => {
+    const currenciesUrl = `${ currencyApiUrl }${ rateDate }?api_key=${ currenciesApiKey }&format=json`;
+    this.httpClient.get<CurrencyResponceApiModel>(currenciesUrl).subscribe((res: CurrencyResponceApiModel) => {
       ctx.setState(state => ({
         ...state,
-        currenciesList: Object.keys(res['rates']).map(el => {
+        currenciesList: Object.keys(res.rates).map(el => {
           return {
             abbr: el,
-            fullName: res['rates'][el]['currency_name']
+            fullName: res.rates[el].currency_name
           };
         }),
       }))
     })
+
     const ratesUrl = this.getCurrencyApiUrl(rateDate, popularCurrencies.leftSideCurrency[0].abbr, popularCurrencies.rightSideCurrency[0].abbr)
-    this.httpClient.get(ratesUrl).subscribe((res: any) => {
+    this.httpClient.get<CurrencyResponceApiModel>(ratesUrl).subscribe((res: CurrencyResponceApiModel) => {
       const state = ctx.getState();
       ctx.setState({
         ...state,
         date: rateDate,
         leftSideCurrency: {
-          description: {
-            abbr: res['base_currency_code'],
-            fullName: res['base_currency_name'],
-          },
+          description: popularCurrencies.leftSideCurrency[0],
           values: {
-            rates: res['amount'],
-            count: +(parseFloat(res['amount']).toFixed(2)),
+            rates: +res.amount,
+            count: +(parseFloat(res.amount).toFixed(2)),
           }
         },
         rightSideCurrency: {
-          description: {
-            abbr: popularCurrencies.rightSideCurrency[0].abbr,
-            fullName: res['rates'][popularCurrencies.rightSideCurrency[0].abbr]['currency_name'],
-          },
+          description: popularCurrencies.rightSideCurrency[0],
           values: {
-            rates: res['rates'][popularCurrencies.rightSideCurrency[0].abbr]['rate'],
-            count: +(parseFloat(res['rates'][popularCurrencies.rightSideCurrency[0].abbr]['rate_for_amount']).toFixed(2)),
+            rates: +res.rates[popularCurrencies.rightSideCurrency[0].abbr].rate,
+            count: +(parseFloat(res.rates[popularCurrencies.rightSideCurrency[0].abbr].rate_for_amount).toFixed(2)),
           }
         },
         popularCurrencies: popularCurrencies,
       })
     })
-
   }
 
   @Action(SwapCurrencies)
   swapCurrencies(ctx: StateContext<CurrencyStateModel>) {
-    const state = ctx.getState()
-    ctx.setState((state: any) => {
+    const state: CurrencyStateModel = ctx.getState()
+    ctx.setState((state: CurrencyStateModel) => {
       this.updateLocalStorage({ leftSideCurrency: state.popularCurrencies.leftSideCurrency, rightSideCurrency: state.popularCurrencies.rightSideCurrency })
       return ({
         ...state,
@@ -170,22 +165,15 @@ export class CurrencyState {
     const state = ctx.getState();
     const rateDate = this.getCorrectDate(action.payload)
     const ratesUrl = this.getCurrencyApiUrl(rateDate, state.leftSideCurrency.description.abbr, state.rightSideCurrency.description.abbr)
-    this.httpClient.get(ratesUrl).subscribe((res: any) => {
+    this.httpClient.get<CurrencyResponceApiModel>(ratesUrl).subscribe((res: CurrencyResponceApiModel) => {
       ctx.setState({
         ...state,
         date: action.payload,
-        leftSideCurrency: {
-          description: state.leftSideCurrency.description,
-          values: {
-            rates: +res['amount'],
-            count: state.leftSideCurrency.values.count,
-          }
-        },
         rightSideCurrency: {
           description: state.rightSideCurrency.description,
           values: {
-            rates: res['rates'][state.rightSideCurrency.description.abbr]['rate'],
-            count: +((state.leftSideCurrency.values.count * res['rates'][state.rightSideCurrency.description.abbr]['rate']).toFixed(2)),
+            rates: +res.rates[state.rightSideCurrency.description.abbr].rate,
+            count: +((state.leftSideCurrency.values.count * +res.rates[state.rightSideCurrency.description.abbr].rate).toFixed(2)),
           }
         },
       })
@@ -226,7 +214,7 @@ export class CurrencyState {
       rightSideCurrency: [],
     };
 
-    this.httpClient.get(ratesUrl).subscribe((res: any) => {
+    this.httpClient.get<CurrencyResponceApiModel>(ratesUrl).subscribe((res: CurrencyResponceApiModel) => {
       if (state.leftSideCurrency.description.abbr == action.previousCode) {
         for(let key in state.popularCurrencies.leftSideCurrency){
           popularCurrencies.leftSideCurrency.push(state.popularCurrencies.leftSideCurrency[key])
@@ -253,8 +241,8 @@ export class CurrencyState {
           rightSideCurrency: {
             description: state.rightSideCurrency.description,
             values: {
-              rates: res['rates'][state.rightSideCurrency.description.abbr]['rate'],
-              count: +(state.leftSideCurrency.values.count * res['rates'][state.rightSideCurrency.description.abbr]['rate']).toFixed(2),
+              rates: +res.rates[state.rightSideCurrency.description.abbr].rate,
+              count: +(state.leftSideCurrency.values.count * +res.rates[state.rightSideCurrency.description.abbr].rate).toFixed(2),
             },
           },
           popularCurrencies: popularCurrencies,
@@ -282,8 +270,8 @@ export class CurrencyState {
               fullName: action.payload.fullName,
             },
             values: {
-              rates: res['rates'][action.payload.abbr]['rate'],
-              count: +(state.leftSideCurrency.values.count * res['rates'][action.payload.abbr]['rate']).toFixed(2),
+              rates: +res.rates[action.payload.abbr].rate,
+              count: +(state.leftSideCurrency.values.count * +res.rates[action.payload.abbr].rate).toFixed(2),
             },
           },
           popularCurrencies: popularCurrencies,
@@ -298,10 +286,12 @@ export class CurrencyState {
   static currency(state: CurrencyStateModel) {
     return state;
   }
+
   @Selector()
   static values(state: CurrencyStateModel) {
     return { leftSideCurrency: state.leftSideCurrency, rightSideCurrency: state.rightSideCurrency }
   }
+
   @Selector()
   static sideCurrencyValues(state: CurrencyStateModel) {
     return {

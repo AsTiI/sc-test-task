@@ -1,12 +1,9 @@
 import { Component, OnInit, Input } from '@angular/core';
-
 import { CurrencyState } from '../../state/currency.state';
 import { Select, Store } from '@ngxs/store';
 import { Observable, Subscription } from 'rxjs';
 import { map, catchError} from 'rxjs/operators';
-
 import { CurrencyStateModel,  Currency, CurrencyDescription, CurrencyValues, LocalStorage } from '../../state/currency.model';
-
 import {
   UpdateCurrency
 } from '../../state/currency.actions'
@@ -74,13 +71,11 @@ export class CurrencySearchComponent implements OnInit {
 
     });
   }
+
   ngOnDestroy(): void {
     this.currencySubscription.unsubscribe();
   }
 
-  handleMissingImage(event: Event){
-    (event.target as HTMLImageElement).src = 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Blank.jpg';
-  }
   chooseCurrency(newCurrencyValue: CurrencyDescription) {
     if (newCurrencyValue.abbr != this.currentCurrencyValue.description.abbr) {
       this.storeCurrency.dispatch(new UpdateCurrency(newCurrencyValue, this.currentCurrencyValue.description.abbr))
@@ -88,21 +83,25 @@ export class CurrencySearchComponent implements OnInit {
     }
     this.onCloseSearch();
   }
+
   choosePopularCurrency(popularCurrency: CurrencyDescription) {
     this.storeCurrency.dispatch(new UpdateCurrency(popularCurrency, this.currentCurrencyValue.description.abbr))
     this.currentCurrencyValue.description = popularCurrency;
-    this.search = this.currentCurrencyValue.description.abbr + '  '+ this.currentCurrencyValue.description.fullName;
+    this.search = `${ this.currentCurrencyValue.description.abbr }  ${ this.currentCurrencyValue.description.fullName }`;
   }
+
   onSearch(){
     this.search = '';
     this.toggleCurrencyModal()
   }
+
   onCloseSearch() {
     if(this.showPopularCurrencies){
-      this.search = this.currentCurrencyValue.description.abbr + '  '+ this.currentCurrencyValue.description.fullName;
+      this.search = `${ this.currentCurrencyValue.description.abbr }  ${ this.currentCurrencyValue.description.fullName }`;
       this.toggleCurrencyModal()
     }
   }
+
   toggleCurrencyModal(){
     this.showPopularCurrencies = !this.showPopularCurrencies;
   }

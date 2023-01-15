@@ -26,7 +26,6 @@ interface sideCurrencyValuesModel {
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-
 export class AppComponent implements OnInit {
   @Select(CurrencyState.sideCurrencyValues) sideCurrencyValues$!: Observable<sideCurrencyValuesModel>
   private sideCurrencyValuesSubscriptor!: Subscription;
@@ -68,8 +67,9 @@ export class AppComponent implements OnInit {
     if(parseInt(mm) < 10){
       mm = '0' + mm.toString()
     }
-    return yyyy + '-' + mm + '-' + dd
+    return `${yyyy}-${mm}-${dd}`
   }
+
   swapCurrencies(){
     this.storeCurrency.dispatch(new SwapCurrencies());
   }

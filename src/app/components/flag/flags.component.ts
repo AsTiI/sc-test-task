@@ -10,6 +10,6 @@ export class FlagsComponent {
   constructor() {}
 
   handleMissingImage(event: Event){
-    (event.target as HTMLImageElement).src = 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Blank.jpg';
+    (event.target as HTMLImageElement).src = '/assets/images/Blank.jpg';
   }
 }

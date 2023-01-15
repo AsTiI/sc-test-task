@@ -1,6 +1,7 @@
 .currencyInputContainer {
   display: flex;
   flex-direction: column;
+
   .inputValue {
     width: 362px;
     padding: 15px;
@@ -10,16 +11,19 @@
     font-size: 24px;
     background-color: #ededed;
   }
+
   .inputValue:focus {
     outline: none;
     background-color: #cfcfcf;
     border-color: #737373;
   }
+
   input::-webkit-outer-spin-button,
   input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
+
   input[type=number] {
     -moz-appearance:textfield;
   }

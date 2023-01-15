@@ -2,9 +2,7 @@ import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { CurrencyState } from '../../state/currency.state';
 import { Select, Store } from '@ngxs/store';
 import { Observable, Subscription } from 'rxjs';
-
 import { CurrencyStateModel,  Currency, CurrencyDescription, CurrencyValues, LocalStorage } from '../../state/currency.model';
-
 import {
   UpdateValues,
 } from '../../state/currency.actions';
@@ -19,7 +17,6 @@ interface sideCurrencyValuesModel {
   templateUrl: './currency-input.component.html',
   styleUrls: ['./currency-input.component.scss']
 })
-
 export class CurrencyInputComponent implements  OnInit {
   @Select(CurrencyState.values) values$!: Observable<sideCurrencyValuesModel>;
   private currencySubscription!: Subscription;

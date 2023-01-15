@@ -4,10 +4,10 @@ import { CurrencyDescription } from '../state/currency.model';
 class Currency {
   constructor(public code: string, public fullName: string) {}
 }
+
 @Pipe({
   name: 'filter'
 })
-
 export class FilterPipe implements PipeTransform {
   transform(value: CurrencyDescription[], searchValue: string): CurrencyDescription[] {
     return value.filter(( v: CurrencyDescription) =>
