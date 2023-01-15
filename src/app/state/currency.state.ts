@@ -54,47 +54,6 @@ const currenciesApiKey = '135cf9bf129e0a9aed44050143e2d36d2f3ba2b2';
         fullName: 'Japanese yen',
       }]
     }
-
-    // values: [
-    //   {
-    //     currency: {
-    //       code: 'EUR',
-    //       fullName: 'Euro',
-    //     },
-    //     rates: '1.0000',
-    //     count:  '0.00',
-    //     popularCurrencies: [
-    //       {
-    //         code: 'EUR',
-    //         fullName: 'Euro'
-    //       },
-    //       {
-    //         code: 'USD',
-    //         fullName: 'United State Dollar'
-    //       },
-    //       {
-    //         code: 'BYN',
-    //         fullName: 'Belarusian Ruble'
-    //       }],
-    //   },
-    //   {
-    //     currency: {
-    //       code: 'USD',
-    //       fullName: 'United States Dollar',
-    //     },
-    //     rates: '1.0600',
-    //     count: '0.00',
-    //     popularCurrencies: [{
-    //       code: 'USD',
-    //       fullName: 'United States Dollar'
-    //     },{
-    //       code: 'EUR',
-    //       fullName: 'Euro'
-    //     },{
-    //       code: 'BYN',
-    //       fullName: 'Belarusian Ruble'
-    //     }],
-    //   }],
   },
 })
 
@@ -137,10 +96,6 @@ export class CurrencyState {
 
     const rateDate = this.getCorrectDate();
 
-    // const curriedCurrencyApiUrl = this.curryCurrencyApiUrl(this.getCurrencyApiUrl)
-    // const currenciesApiUrl = curriedCurrencyApiUrl(rateDate)
-    // console.log(currenciesApiUrl)
-
     const currenciesUrl = `https://api.getgeoapi.com/v2/currency/historical/${ rateDate }?api_key=${ currenciesApiKey }&format=json`;
     this.httpClient.get(currenciesUrl).subscribe((res: any) => {
       ctx.setState(state => ({
@@ -154,7 +109,6 @@ export class CurrencyState {
       }))
     })
     const ratesUrl = this.getCurrencyApiUrl(rateDate, popularCurrencies.leftSideCurrency[0].abbr, popularCurrencies.rightSideCurrency[0].abbr)
-    // const ratesUrl = `https://api.getgeoapi.com/v2/currency/historical/${ rateDate }?api_key=${ currenciesApiKey }&from=${ popularCurrencies[0][0].code }&to=${ popularCurrencies[1][0].code }&format=json`;
     this.httpClient.get(ratesUrl).subscribe((res: any) => {
       const state = ctx.getState();
       ctx.setState({

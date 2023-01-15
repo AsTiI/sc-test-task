@@ -1,9 +1,7 @@
-import { Component, OnInit, Input} from '@angular/core';
-
+import { Component, OnInit, Input, OnDestroy} from '@angular/core';
 import { CurrencyState } from '../app/state/currency.state';
 import { Select, Store } from '@ngxs/store';
 import { Observable, Subscription } from 'rxjs';
-
 import { CurrencyStateModel,  Currency, CurrencyDescription, CurrencyValues, LocalStorage } from './state/currency.model';
 
 import {

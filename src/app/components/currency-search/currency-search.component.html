@@ -1,32 +1,42 @@
 <div class="currencySearchContainer">
-  <div class="inputCurrency" (click)="!showPopularCurrencies? onSearch(): onCloseSearch()">
+  <div
+    class="inputCurrency"
+    (click)="!showPopularCurrencies ? onSearch() : onCloseSearch()">
     <div class="currencyFlag">
-      <img *ngIf="showPopularCurrencies"
-           class="search" src='assets/search.png' alt="flag">
-      <app-flags *ngIf="!showPopularCurrencies"  [flagId]="currentCurrencyValue.description.abbr.substr(0,2)" ></app-flags>
+      <img
+        *ngIf="showPopularCurrencies"
+        class="search"
+        src="assets/search.png"
+        alt="flag" />
+      <app-flags
+        *ngIf="!showPopularCurrencies"
+        [flagId]="
+          currentCurrencyValue.description.abbr.substr(0, 2)
+        "></app-flags>
     </div>
-    <input class="searchCurrency"
-           [(ngModel)]="search"
-           type="search" >
+    <input class="searchCurrency" [(ngModel)]="search" type="search" />
     <span *ngIf="showPopularCurrencies" class="firstSpan"></span>
     <span *ngIf="!showPopularCurrencies" class="secondSpan"></span>
   </div>
   <div *ngIf="showPopularCurrencies" class="currencyList">
     <p>List of currencies</p>
-    <ng-container *ngFor="let item of (currency.currenciesList | filter: search) as folder">
-      <div class="currencyListItem" (click)="chooseCurrency(item)" >
-        <app-flags [flagId]="item.abbr.substr(0,2)" ></app-flags>
+    <ng-container
+      *ngFor="let item of currency.currenciesList | filter : search as folder">
+      <div class="currencyListItem" (click)="chooseCurrency(item)">
+        <app-flags [flagId]="item.abbr.substr(0, 2)"></app-flags>
         <span>{{ item.abbr }}</span>
         {{ item.fullName }}
       </div>
     </ng-container>
-    <div class="notFound" *ngIf="(currency.currenciesList | filter: search).length <1">
+    <div
+      class="notFound"
+      *ngIf="(currency.currenciesList | filter : search).length < 1">
       <p>Not Found</p>
     </div>
   </div>
   <div class="popularCurrencies">
     <ul>
-      <ng-container *ngFor="let item of currentCurrencyValue.popularCurrencies" >
+      <ng-container *ngFor="let item of currentCurrencyValue.popularCurrencies">
         <li (click)="choosePopularCurrency(item)">{{ item.abbr }}</li>
       </ng-container>
     </ul>

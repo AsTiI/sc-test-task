@@ -2,18 +2,40 @@
   <div class="currenciesContainer">
     <div class="currencyWrapper">
       <div class="currencyContainer">
-        <app-currency-search [dataCode]="sideCurrencyValues.leftSideCurrency"></app-currency-search>
-        <app-currency-input [dataRate]="sideCurrencyValues.leftSideCurrency"></app-currency-input>
+        <app-currency-search
+          [dataCode]="
+            sideCurrencyValues.leftSideCurrency
+          "></app-currency-search>
+        <app-currency-input
+          [dataRate]="sideCurrencyValues.leftSideCurrency"></app-currency-input>
       </div>
-      <img (click)="swapCurrencies()" class="arrowsImg" src='assets/arrows.png' alt="arrows">
+      <img
+        (click)="swapCurrencies()"
+        class="arrowsImg"
+        src="assets/arrows.png"
+        alt="arrows" />
       <div class="currencyContainer">
-        <app-currency-search [dataCode]="sideCurrencyValues.rightSideCurrency"></app-currency-search>
-        <app-currency-input [dataRate]="sideCurrencyValues.rightSideCurrency"></app-currency-input>
+        <app-currency-search
+          [dataCode]="
+            sideCurrencyValues.rightSideCurrency
+          "></app-currency-search>
+        <app-currency-input
+          [dataRate]="
+            sideCurrencyValues.rightSideCurrency
+          "></app-currency-input>
       </div>
     </div>
     <div class="dateWrapper">
       <label for="date">Дата</label>
-      <input [(ngModel)]="dateValue" (ngModelChange)="updateDate($event)" type="date" name="date" id="date" class="dataInput" min="2010-01-01" [max]="maxDate" >
+      <input
+        [(ngModel)]="dateValue"
+        (ngModelChange)="updateDate($event)"
+        type="date"
+        name="date"
+        id="date"
+        class="dataInput"
+        min="2010-01-01"
+        [max]="maxDate" />
     </div>
   </div>
 </div>
